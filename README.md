@@ -23,60 +23,90 @@ High Level Architecture
 
 #########################################################################################
 
-Steps:
-1. Perform Baseline and Target systems Infra details and document for planning the migration.(please refer attached xlsx)
-2. Create a VPC
-      2.1) Assign a CIDR block. (It should NOT overlap with on-premises or other cloud providers).
-3. Create Subnets and CIDR blocks.
-      3.1) public subnet for Internet Traffic.
-      3.2) private Subnet for Database.
-4. Create an Internet Gateway, Attach it to a VPC.
-5. Create an Route -> Add route: 0.0.0.0/0 - Target: Internet Gateway
-6. Create a new EC2 instance (details can be found in planning xlsx - FYR)
-      6.1) Assign Public IP
-7. Create a RDS instance.(details can be found in planning xlsx - FYR)
-8. SSH into EC2 instance -- ssh ubuntu@<PUBLIC_IP> -i <ssh_private_key>  || you can open EC2 AWS console
-     8.1) Install phyton and mysql client.( This is based on the baseline architecture)
-                sudo apt-get update
-                sudo apt-get install python3-dev -y
-                sudo apt-get install libmysqlclient-dev -y
-                sudo apt-get install unzip -y
-                sudo apt-get install libpq-dev python-dev libxml2-dev libxslt1-dev  libldap2-dev -y
-                sudo apt-get install libsasl2-dev libffi-dev -y
+Hands On Project - Part 1 - Terraform
 
-                curl -O https://bootstrap.pypa.io/get-pip.py ; python3 get-pip.py --user
+- Download VSCode and install the Terraform extension:
+https://code.visualstudio.com/download
 
-                export PATH=$PATH:/home/ubuntu/.local/bin/
+- Download and unzip Terraform files (available in the project files)
 
-                pip3 install flask
-                pip3 install wtforms
-                pip3 install flask_mysqldb
-                pip3 install passlib
+- Edit Terraform main.tf file using the VSCode:
+-- Change the VPC_ID and SUBNET_ID according to your default VPC
 
-                sudo apt install awscli -y
-                sudo apt-get install mysql-client -y
-  9. Open RDS Security Group
-        9.1) Type : MYSQL
-        9.2) Source : 0.0.0.0/0 ( This is not good practice to open connectivity for all IP's)
-               --- restrict  source to EC2 - (copy CIDR of EC2 and include in source)
-  10. Connect to the EC2 instance -- ssh ubuntu@<PUBLIC_IP> -i <ssh_private_key>
-         10.1) Download the dump file and app file  -- you can upload files into S3 and can be downloaded into EC2 instance (files attached for your reference)
-         10.2) Use wget <<S3 Address>>
-  11. Connect to MySQL running on AWS RDS
-         11.1) mysql -h <RDS_ENDPOINT> -P 3306 -u admin -p
-         11.2) Create the wiki DB and import data -- create database wikidb; use wikidb;
-         11.3) source dump-en.sql;
-         11.4) Create the user wiki in the wikidb
-                       CREATE USER wiki@'%' IDENTIFIED BY 'wiki123456';
-                       GRANT ALL PRIVILEGES ON wikidb.* TO wiki@'%';
-                       FLUSH PRIVILEGES;
-  12. Unzip the app files -- unzip wikiapp-en.zip -- cd wikiapp
-         12.1) Edit the wiki.py file and change the MYSQL_HOST and point to the RDS endpoint
-  13. Bring up the application
-         13.1) run python3 wiki.py
-  14. Steps to validate the migration:
-         14.1) Open the AWS console, copy the public IP and test the application using:<EC2_PUBLIC_IP>:8080
-         14.2) Login to the application (user:admin / password:) -- same as user
-         14.3) Create a new article
+- Create SSH Key Pair
+-- name: sshkey1
+-- format: .pem
+
+- Install Terraform on AWS Cloud Shell
+
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+sudo yum -y install terraform
+
+- Upload your edited terraform code to AWS Cloud Shell and unzip it
+
+- Run terraform
+
+$ terraform init
+$ terraform plan
+$ terraform apply
+
+- Explore more about Terraform on https://learn.hashicorp.com/terraform
+
+Hands On Project - Part 2 - AWS Systems Manager
+
+- Create an IAM role SystemsManagerToSNS
+
+Policy: AmazonSNSFullAccess
+
+- Create a Notification Topic DevOpsNotification | Copy the ARN
+
+- Create a subscription - email:
+
+- Run the System Manager Quick Setup
+-- Targets: choose instances manually
+
+- Validate the 'configuration':  "Success" status
+
+- Explore the Session Manager connecting by SSH browser (please note: if the EC2 instances don't show up, reboot both instances using the EC2 console to re-run the SSM-agent startup script)
+
+- Execute "Run Command" to deploy the "security agent instalation"
+
+-- Command document: AWS-RunShellScript
+
+-- Command parameters:
+
+sudo wget -q <<upload install_security_agent.sh  to S3 (available in project)and provide the link >> -P /tmp
+sudo chmod +x /tmp/install_security_agent.sh
+sudo /tmp/install_security_agent.sh
+ls -ltr /usr/bin/security_agent
+
+-- Targets: choose instances manually
+
+-- Uncheck enable writing to S3 Bucket.
+
+-- Enable SNS Notification
+
+IAM Role: SystemsManagertoSNS
+SNS Topic: <ARN>
+
+Events notifications:  all Events
+
+Change notifications
+
+Notify me for: Per instance basis
+
+- Open the AWS Cloud Shell and remove the resources created by Terraform
+
+(If needed, re-install the Terraform following the same steps used previously)
+
+cd terraform
+./terraform destroy
+
+That's All! Congrats, Bootcamper!
+
+Supporting Links:
+
+https://aws.amazon.com/premiumsupport/knowledge-center/systems-manager-ec2-instance-not-appear/
         
-  15. Once you done validating -- go ahead and destroy all the resources.      
+Once you done validating -- go ahead and destroy all the resources.      

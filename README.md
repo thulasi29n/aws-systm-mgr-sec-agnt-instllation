@@ -1,9 +1,11 @@
-# aws-onprimesis-cloud-migration
-Problem-Statement:
- Migration of a Workload running in a Corporate Data Center to AWS using the Amazon EC2 and RDS service.
+# aws-system-manager-SNS-Automation of Security Agent Installation
+Project title:
+Implementation of a set of EC2 instances using Terraform and AWS Systems Manager configuration with Amazon Simple Notification Service for automated installation of security officers
  
  High-level Solution:
- The application and database were migrated to AWS using the Lift & Shift (rehost) model, moving both application and database data.
+In this project,as a DevSecOps Engineer I deployed a set of EC2 instances and infrastructure in an automated way using Terraform (infrastructure as code - IaC). Also, it was necessary to install a specific security agent on all these instances in an automated way.
+
+Once I provisioned the infrastructure, AWS System Manager and its component Command Run were used to install the security agents in an automated way. I used the Amazon Simple Notification Service – SNS to send an email informing the whole process status.
 ######################################################################################
 Flow of Steps:
 
@@ -12,11 +14,13 @@ Flow of Steps:
 3. Go-Live
 4. Post Go -live
 
-![flow](https://user-images.githubusercontent.com/26733874/190845806-fc7fcfab-5c41-49fb-bb2a-0892b4977742.png)
+![1](https://user-images.githubusercontent.com/26733874/199411863-f4b7166d-dbaf-4950-9523-2ae120a4412d.png)
+
 
 ##########################################################################################
 High Level Architecture
-![onpremises-migration-aws_abccompany-arch](https://user-images.githubusercontent.com/26733874/190845850-973e4fdf-8bd5-4ae6-ad9f-7c30cbde4999.png)
+![2](https://user-images.githubusercontent.com/26733874/199411899-4f3e1778-552b-4ba6-91fb-7b75dcf1689f.png)
+
 #########################################################################################
 
 Steps:
